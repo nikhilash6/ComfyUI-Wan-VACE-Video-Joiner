@@ -54,7 +54,7 @@ Enable  sageattention and torch compile if you know your system supports them.
 
 ---
 ## Examples
-All examples are a series of Wan 2.2 first-last frame generations joined together with this workflow.
+All examples are a series of Wan 2.2 first-last frame generations joined together with this workflow and Wan 2.2 Fun VACE.
 
 https://github.com/user-attachments/assets/2e7f7cdb-0ce3-4379-a96d-7cf25e28a1ed  
 
