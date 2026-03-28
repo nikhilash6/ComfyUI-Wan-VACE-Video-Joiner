@@ -27,3 +27,6 @@ venv/
 .env
 
 TODO.md
+
+# --- Claude Code ---
+.claude/
