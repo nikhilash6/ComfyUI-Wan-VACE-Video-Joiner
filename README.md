@@ -3,34 +3,38 @@
 [Github](https://github.com/stuttlepress/ComfyUI-Wan-VACE-Video-Joiner) | [CivitAI](https://civitai.com/models/2024299)
 
 ## What it Does
-This ComfyUI workflow creates smooth transitions between video clips using Wan VACE (Wan 2.2 Fun VACE or Wan 2.1 VACE). While designed for Wan video workflow outputs, it works with video from any model or other source-LTX-2, drone footage, stock video, personal recordings, etc.
 
-The workflow processes clips in a directory, replacing a configurable number of frames at each transition point to eliminate awkward motion jumps that can occur when joining clips. Context frames before and after each transition guide the generation. If you have noisy or artifacted frames at clip boundaries, this technique can also eliminate those.
+Point this workflow at a directory of clips and it will automatically stitch them together. It's designed to work well with a few clips or. At each transition, Wan VACE generates new frames guided by context on both sides, replacing the seam with motion that flows naturally between the clips. Noisy or artifacted frames at clip boundaries get replaced in the same pass. How many context frames and generated frames are used is configurable.
 
-Output can be either individual smoothed clips or a single concatenated video.
+The workflow runs with either Wan 2.1 VACE or Wan 2.2 Fun VACE. Input clips can come from anywhere — Wan, LTX-2, phone footage, stock video, whatever you have. 
 
-## Setup
-***This is not a ready to run workflow. You need to configure it to fit your system.***
-What runs well on my system will not necessarily run well on yours. Configure this workflow to use a VACE model of the same type that you use in your standard Wan workflow. Detailed configuration and usage instructions can be found in the workflow. Please read carefully.
+If you want the result to loop cleanly, there's a toggle for that.
+
+## Usage
+
+1. Put your input clips in their own directory, named so they sort in the order you want them joined.
+2. Configure the workflow parameters. The notes in the workflow have full details on each one.
+3. Set the index to 0.
+4. Queue the workflow. **You need to queue it once per transition.** That's N-1 times for N clips, or N times if looping is enabled.
 
 ## Dependencies
 I've used native nodes and tried to keep the custom node dependencies to a minimum. The following packages are required. All of them are installable through the Manager.
-- [ComfyUI-Wan-VACE-Prep](https://github.com/stuttlepress/ComfyUI-Wan-VACE-Prep)
+- [ComfyUI-Wan-VACE-Prep](https://github.com/stuttlepress/ComfyUI-Wan-VACE-Prep) v1.0.12 or higher
 - [ComfyUI-KJNodes](https://github.com/kijai/ComfyUI-KJNodes)
 - [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite)
 - [Basic data handling](https://github.com/StableLlama/ComfyUI-basic_data_handling)
 - [ComfyUI-mxToolkit](https://github.com/Smirnov75/ComfyUI-mxToolkit)
 
-**Note:** I have not tested this workflow under the Nodes 2.0 UI.
+**Note:** I have not tested this workflow under the ComfyUI Nodes 2.0 renderer.
 
-## Configuration and Models
-You'll need some combination of these models to run the workflow. As already mentioned, this workflow will not run properly on your system until you configure it properly. You probably already have a Wan video generation workflow that runs well on your system. You need to configure this workflow similarly to your generation workflow. 
+## Models and Configuration
+Configure this workflow the same way you have your existing Wan generation workflow set up. What runs well there will run well here.
 
-The *Sampler* subgraph contains KSampler nodes and model loading nodes. Inference is isolated in subgraphs, so it should be easy to modify this workflow for your preferred setup. Replace the provided sampler subgraph with one that implements your setup, then plug it into the workflow. Have your way with these until it feels right to you.  
+Inference is isolated in the *Sampler* subgraph so it's straightforward to swap in your preferred setup. Replace the provided subgraph with one that works for you and plug it in. Have your way with it until it feels right.
 
-Just make sure all the subgraph inputs and outputs are correctly getting and setting data, and crucially, that the diffusion model you load is one of *Wan2.2 Fun VACE* or *Wan2.1 VACE*. GGUFs work fine, but non-VACE models do not. An example alternate sampler subgraph for VACE 2.1 is included.
+Just make sure all subgraph inputs and outputs are correctly wired, and crucially, that the diffusion model you load is *Wan 2.2 Fun VACE* or *Wan 2.1 VACE*. GGUFs work fine, but non-VACE models do not. An example alternate sampler subgraph for VACE 2.1 is included.
 
-Enable  sageattention and torch compile if you know your system supports them.
+Enable sageattention and torch compile if your system supports them.
 
 
 - Wan 2.2 Fun VACE
@@ -65,13 +69,15 @@ https://github.com/user-attachments/assets/13d7cacd-1404-49a1-8652-6bfdf49efdf3
 ---
 
 ## Changelog
+- **v2.5**
+  - **Seamless Loops** - Enable the `Make Loop` toggle and the workflow will generate a smooth transition between your final input video and the first one, allowing the video to be played on a loop.
+  - **Much lower RAM usage during final assembly** - Enabled by default, VideoHelperSuite's *Meta Batch Manager* drastically reduces the amount of system RAM consumed while concatenating frames. If you were running out of RAM on the final step because you were joining hundreds or thousands of frames, that shouldn't be a  problem any more. Additional details in the workflow notes.
 - **v2.4** - Minor tweaks. Adjust sage attention, torch compile defaults.
 - **v2.3** This release prioritizes workflow reliability and maintainability. Core functionality remains unchanged. These changes reduce surface area for failures and improve debuggability. Stability and deterministic operation take priority over convenience features.
-
-  - **Looping workflow discontinued** – While still functional, the loop-based approach obscured workflow status and complicated targeted reruns for specific transitions. The batch workflow provides better visibility and control.
-  - **Reverted to lossless fv1 intermediate files** – The 16-bit PNG experiment provided no practical benefit and made addressing individual joins more cumbersome. Returning to the proven method.
-  - **New custom nodes for cleaner workflows** – *WAN VACE Prep Batch* and *VACE Batch Context* encapsulate operations that are awkward to express in visual nodes but straightforward in Python. *Load Videos From Folder (simple)* replaces the KJNodes equivalent to eliminate problematic VideoHelperSuite dependencies that fail in some environments.
-  - **Enhanced console logging** – Additional diagnostic output when `Debug=True` to aid troubleshooting.
+  - **Looping workflow discontinued** - While still functional, the loop-based approach obscured workflow status and complicated targeted reruns for specific transitions. The batch workflow provides better visibility and control.
+  - **Reverted to lossless fv1 intermediate files** - The 16-bit PNG experiment provided no practical benefit and made addressing individual joins more cumbersome. Returning to the proven method.
+  - **New custom nodes for cleaner workflows** - *WAN VACE Prep Batch* and *VACE Batch Context* encapsulate operations that are awkward to express in visual nodes but straightforward in Python. *Load Videos From Folder (simple)* replaces the KJNodes equivalent to eliminate problematic VideoHelperSuite dependencies that fail in some environments.
+  - **Enhanced console logging** - Additional diagnostic output when `Debug=True` to aid troubleshooting.
   - **Fewer custom node dependencies**
 
 - **[Lightweight workflow added.](README-lightweight.md)**
